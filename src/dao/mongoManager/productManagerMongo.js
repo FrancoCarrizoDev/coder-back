@@ -10,8 +10,8 @@ class ProductManagerMongo {
     return await ProductsModel.paginate(query, { page, limit, sort: { price: `${sort}` } })
   }
 
-  getById = async (_id) => {
-    return await ProductsModel.findOne({_id})
+  getById = async (id) => {
+    return await ProductsModel.findById(id)
   }
 
   updateProduct = async (id, newProduct) => {

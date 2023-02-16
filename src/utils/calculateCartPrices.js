@@ -15,7 +15,7 @@ const mapProductCart = async(products) => {
         const indexProduct = productCartList.findIndex(({product} ) => product === idProduct)
 
         if (indexProduct === -1) {
-            const productDb = await ProductManager.getProductById(idProduct)
+            const productDb = await ProductManager.getById(idProduct)
 
             if (productDb) {
                 productCartList.push({

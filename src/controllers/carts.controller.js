@@ -1,21 +1,21 @@
 const CartsManagerMongo = require('../dao/mongoManager/cartsManagerMongo')
-const ProductManagerMongo = require('../dao/mongoManager/cartsManagerMongo')
-const { mapProductCart } = require('../utils/calculateCartPrices')
+const ProductManagerMongo = require('../dao/mongoManager/productManagerMongo')
+const { mapProductCart, calculateCartTotal } = require('../utils/calculateCartPrices')
 
 const createCart = async (req, res) => {
 	try {
 		const { products = [] } = req.body
 
 		let { productCartList, productsNotFound } = await mapProductCart(products)
-		const newCart = {
-			totalPrice: calculateCartTotal(products),
-			totalQuantity: products.length,
-			products: products,
+		const cart = {
+			totalPrice: calculateCartTotal(productCartList),
+			totalQuantity: productCartList.length,
+			products: productCartList,
 		}
-		await CartsManagerMongo.create(productCartList)
+		await CartsManagerMongo.create(cart)
 		return res.json({
 			msg: 'OK',
-			payload: { newCart, productsNotFound },
+			payload: { cart, productsNotFound },
 		})
 	} catch (error) {
 		return res.status(500).json({
@@ -41,44 +41,6 @@ const getCart = async (req, res) => {
 			payload: `No existe un carrito con el id ${cid}`,
 		})
 	
-}
-
-const createCartAndAddAProduct = async (req, res) => {
-	try {
-		const { cid, pid } = req.params
-
-		let cart = await CartsManagerMongo.getById(cid)
-
-		if (cart) {
-			return res.status(400).json({
-				mg: 'Error',
-				payload: 'El carrito ya existe, usar api put',
-			})
-		}
-
-		const productInDB = ProductManagerMongo.getById(pid)
-
-		if(!productInDB){
-			return res.status(400).json({
-				mg: 'Error',
-				payload: `El producto con el id ${pid} no existe`,
-			})
-		}
-
-		cart.products.push({ product: pid, quantity: 1 })
-
-		const payload = await CartsManagerMongo.updateCart(cid, cart)
-
-		res.json({
-			msg: 'OK',
-			payload,
-		})
-	} catch (error) {
-		return res.status(500).json({
-			msg: 'Error',
-			payload: error.message,
-		})
-	}
 }
 
 const deleteProduct = async (req, res) => {
@@ -137,14 +99,14 @@ const updateAllProducts = async (req, res) => {
 		const { productCartList, productsNotFound } = await mapProductCart(products)
 
 		const cartUpdated = {
-			totalPrice: calculateCartTotal(products),
-			totalQuantity: products.length,
-			products: products,
+			totalPrice: calculateCartTotal(productCartList),
+			totalQuantity: productCartList.length,
+			products: productCartList,
 		}
 
 		await CartsManagerMongo.updateCart(cid, cartUpdated)
 
-		res.json({
+		return res.json({
 			msg: productsNotFound.length > 0 ? 'WARNING' : 'OK',
 			payload: { productCartList, productsNotFound },
 		})
@@ -188,7 +150,7 @@ const updateProductQuantity = async (req, res) => {
 
 		cart.products[indexProduct].quantity += quantity
 
-		await CartsManagerMongo.updateProductInCart(cid, cart)
+		await CartsManagerMongo.updateCart(cid, cart)
 
 		res.json({
 			msg: 'OK',
@@ -205,7 +167,6 @@ const updateProductQuantity = async (req, res) => {
 module.exports = {
 	createCart,
 	getCart,
-	createCartAndAddAProduct,
 	deleteProduct,
 	updateAllProducts,
 	updateProductQuantity,

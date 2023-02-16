@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const cartsRouter = require('./routes/carts.router')
 const productRouter = require('./routes/products.router')
@@ -35,9 +36,10 @@ connectSocket(httpServer)
 //Mongoose
 mongoose.set('strictQuery', false)
 mongoose.connect(
-  'mongodb+srv://CoderUser:CoderPass@codercluster.5ssvndd.mongodb.net/?retryWrites=true&w=majority',
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`,
   (error) => {
     if (error) {
+      console.log(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/?retryWrites=true&w=majority`)
       console.log('Error de conexión. ', error)
       process.exit()
     } else {

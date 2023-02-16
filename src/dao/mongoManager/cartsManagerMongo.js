@@ -1,4 +1,3 @@
-const { calculateCartTotal } = require('../../utils/calculateCartPrices')
 const CartsModel = require('../models/carts.model')
 
 class CartsManagerMongo {

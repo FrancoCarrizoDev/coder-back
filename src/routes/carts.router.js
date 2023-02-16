@@ -11,9 +11,6 @@ router.post('/', cartsController.createCart)
 //Cart By ID
 router.get('/:cid', cartsController.getCart)
 
-//Add Product to Cart ID
-router.post('/:cid/product/:pid', cartsController.createCartAndAddAProduct)
-
 //Delete Product from Cart ID
 router.delete('/:cid/product/:pid', cartsController.deleteProduct)
 
