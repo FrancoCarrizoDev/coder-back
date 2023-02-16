@@ -9,19 +9,19 @@ const router = Router()
 router.post('/', cartsController.createCart)
 
 //Cart By ID
-router.get('/:cid', cartsController.getCartByID)
+router.get('/:cid', cartsController.getCart)
 
 //Add Product to Cart ID
-router.post('/:cid/product/:pid', cartsController.addCart)
+router.post('/:cid/product/:pid', cartsController.createCartAndAddAProduct)
 
 //Delete Product from Cart ID
-router.delete('/:cid/product/:pid', cartsController.deleteProductFromCartdID)
+router.delete('/:cid/product/:pid', cartsController.deleteProduct)
 
 //Update Cart by ID
-router.put('/:cid', cartsController.updateCartByID)
+router.put('/:cid', cartsController.updateAllProducts)
 
 //Update Product quantity on Cart ID
-router.put('/:cid/product/:pid', cartsController.updateProductQuantityByCartID)
+router.put('/:cid/product/:pid', cartsController.updateProductQuantity)
 
 
 module.exports = router

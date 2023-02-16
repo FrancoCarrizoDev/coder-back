@@ -1,13 +1,21 @@
 const CartsManagerMongo = require('../dao/mongoManager/cartsManagerMongo')
-const productManagerMongo = require('../dao/mongoManager/productManagerMongo')
+const ProductManagerMongo = require('../dao/mongoManager/cartsManagerMongo')
+const { mapProductCart } = require('../utils/calculateCartPrices')
 
 const createCart = async (req, res) => {
 	try {
 		const { products = [] } = req.body
-		const cartAdded = await CartsManagerMongo.createCart(products)
+
+		let { productCartList, productsNotFound } = await mapProductCart(products)
+		const newCart = {
+			totalPrice: calculateCartTotal(products),
+			totalQuantity: products.length,
+			products: products,
+		}
+		await CartsManagerMongo.create(productCartList)
 		return res.json({
 			msg: 'OK',
-			payload: cartAdded,
+			payload: { newCart, productsNotFound },
 		})
 	} catch (error) {
 		return res.status(500).json({
@@ -17,29 +25,30 @@ const createCart = async (req, res) => {
 	}
 }
 
-const getCartByID = async (req, res) => {
-	try {
+const getCart = async (req, res) => {
 		const cid = req.params.cid
-		const cartFound = await CartsManagerMongo.getCartByID(cid)
-		return res.json({
-			msg: 'OK',
-			payload: cartFound,
-		})
-	} catch (error) {
-		return res.status(500).json({
+		const cartFound = await CartsManagerMongo.getById(cid)
+
+		if(cartFound){
+			return res.json({
+				msg: 'OK',
+				payload: cartFound,
+			})
+		}
+		
+		return res.status(404).json({
 			msg: 'Error',
-			payload: error.message,
+			payload: `No existe un carrito con el id ${cid}`,
 		})
-	}
+	
 }
 
-const addCart = async (req, res) => {
+const createCartAndAddAProduct = async (req, res) => {
 	try {
 		const { cid, pid } = req.params
 
-		let cart = await CartsManagerMongo.getCartByID(cid)
+		let cart = await CartsManagerMongo.getById(cid)
 
-		// si no hay carrito, error, no se puede agregar un producto a un carrito vacio
 		if (cart) {
 			return res.status(400).json({
 				mg: 'Error',
@@ -47,9 +56,18 @@ const addCart = async (req, res) => {
 			})
 		}
 
+		const productInDB = ProductManagerMongo.getById(pid)
+
+		if(!productInDB){
+			return res.status(400).json({
+				mg: 'Error',
+				payload: `El producto con el id ${pid} no existe`,
+			})
+		}
+
 		cart.products.push({ product: pid, quantity: 1 })
 
-		const payload = await CartsManagerMongo.updateProductInCart(cid, cart)
+		const payload = await CartsManagerMongo.updateCart(cid, cart)
 
 		res.json({
 			msg: 'OK',
@@ -63,11 +81,11 @@ const addCart = async (req, res) => {
 	}
 }
 
-const deleteProductFromCartdID = async (req, res) => {
+const deleteProduct = async (req, res) => {
 	try {
 		const { cid, pid } = req.params
 
-		const cart = await CartsManagerMongo.getCartByID(cid)
+		const cart = await CartsManagerMongo.getById(cid)
 		if (!cart) {
 			return res.status(400).json({
 				msg: `El carrito con el id ${cid} no existe`,
@@ -84,7 +102,11 @@ const deleteProductFromCartdID = async (req, res) => {
 			})
 		}
 
-		await CartsManagerMongo.deleteProductInCart(cid, pid, cart)
+		cart.products = cart.products.filter(({ product }) => product._id != pid)
+		cart.totalQuantity = cart.products.length
+		cart.totalPrice = calculateCartTotal(cart.products)
+
+		await CartsManagerMongo.updateCart(cid, cart)
 
 		res.json({
 			msg: 'OK',
@@ -98,12 +120,11 @@ const deleteProductFromCartdID = async (req, res) => {
 	}
 }
 
-const updateCartByID = async (req, res) => {
+const updateAllProducts = async (req, res) => {
 	try {
 		const { cid } = req.params
 
-
-		const cart = await CartsManagerMongo.getCartByID(cid)
+		const cart = await CartsManagerMongo.getById(cid)
 		if (!cart) {
 			return res.status(400).json({
 				msg: `El carrito con el id ${cid} no existe`,
@@ -111,11 +132,21 @@ const updateCartByID = async (req, res) => {
 			})
 		}
 
-		const products = req.body
-		await CartsManagerMongo.updateCartByID(cid, products)
+		const { products = [] } = req.body
+
+		const { productCartList, productsNotFound } = await mapProductCart(products)
+
+		const cartUpdated = {
+			totalPrice: calculateCartTotal(products),
+			totalQuantity: products.length,
+			products: products,
+		}
+
+		await CartsManagerMongo.updateCart(cid, cartUpdated)
+
 		res.json({
-			msg: 'OK',
-			payload: 'Cart updated successfully',
+			msg: productsNotFound.length > 0 ? 'WARNING' : 'OK',
+			payload: { productCartList, productsNotFound },
 		})
 	} catch (error) {
 		return res.status(500).json({
@@ -125,12 +156,11 @@ const updateCartByID = async (req, res) => {
 	}
 }
 
-const updateProductQuantityByCartID = async (req, res) => {
+const updateProductQuantity = async (req, res) => {
 	try {
-
 		const { cid, pid } = req.params
-		const {quantity = 0} = req.body
-		const cart = await CartsManagerMongo.getCartByID(cid)
+		const { quantity = 0 } = req.body
+		const cart = await CartsManagerMongo.getById(cid)
 		if (!cart) {
 			return res.status(400).json({
 				msg: `El carrito con el id ${cid} no existe`,
@@ -138,19 +168,18 @@ const updateProductQuantityByCartID = async (req, res) => {
 			})
 		}
 
-		
-		const productInDb = await productManagerMongo.getProductById(pid)
+		const productInDb = await ProductManagerMongo.getById(pid)
 
-		if(!productInDb){
+		if (!productInDb) {
 			return res.status(400).json({
 				msg: `El producto con el id ${pid} no existe en base de datos`,
 				ok: false,
 			})
 		}
 
-		const indexProduct = cart.products.findIndex(({product}) => product._id == pid)
+		const indexProduct = cart.products.findIndex(({ product }) => product._id == pid)
 
-		if(indexProduct === -1){
+		if (indexProduct === -1) {
 			return res.status(400).json({
 				msg: `El producto con el id ${pid} no existe en el carrito`,
 				ok: false,
@@ -159,14 +188,12 @@ const updateProductQuantityByCartID = async (req, res) => {
 
 		cart.products[indexProduct].quantity += quantity
 
-
 		await CartsManagerMongo.updateProductInCart(cid, cart)
 
 		res.json({
 			msg: 'OK',
 			payload: 'Cart updated successfully',
 		})
-
 	} catch (error) {
 		return res.status(500).json({
 			msg: 'Error',
@@ -177,10 +204,9 @@ const updateProductQuantityByCartID = async (req, res) => {
 
 module.exports = {
 	createCart,
-	addCart,
-	getCartByID,
-	addProductToCartID: addCart,
-	deleteProductFromCartdID,
-	updateCartByID,
-	updateProductQuantityByCartID,
+	getCart,
+	createCartAndAddAProduct,
+	deleteProduct,
+	updateAllProducts,
+	updateProductQuantity,
 }

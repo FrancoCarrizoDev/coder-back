@@ -10,13 +10,8 @@ class ProductManagerMongo {
     return await ProductsModel.paginate(query, { page, limit, sort: { price: `${sort}` } })
   }
 
-  getProductById = async (_id) => {
-    const productFound = await ProductsModel.findOne({_id})
-    if (productFound) {
-      return productFound
-    } else {
-      throw new Error('Product not found')
-    }
+  getById = async (_id) => {
+    return await ProductsModel.findOne({_id})
   }
 
   updateProduct = async (id, newProduct) => {

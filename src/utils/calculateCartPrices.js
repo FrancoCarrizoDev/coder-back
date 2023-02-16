@@ -7,28 +7,31 @@ const calculateCartTotal = (products) => {
     )
 }
 
-const mapProductCart = async({products}) => {
-    let productsToAdd = []
+const mapProductCart = async(products) => {
+    let productCartList = []
+    let productsNotFound = []
 
     for (const idProduct of products) {
-        const indexProduct = productsToAdd.findIndex(({product} ) => product === idProduct)
+        const indexProduct = productCartList.findIndex(({product} ) => product === idProduct)
 
         if (indexProduct === -1) {
             const productDb = await ProductManager.getProductById(idProduct)
 
             if (productDb) {
-                productsToAdd.push({
+                productCartList.push({
                     product: idProduct,
                     quantity: 1,
                     unitValue: productDb.price,
                 })
+            }else{
+                productsNotFound.push(idProduct)
             }
         } else {
-            productsToAdd[indexProduct].quantity++
+            productCartList[indexProduct].quantity++
         }
     }
 
-    return productsToAdd;
+    return {productCartList, productsNotFound};
 }
 
 module.exports = {
