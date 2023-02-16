@@ -1,0 +1,42 @@
+const { Router } = require('express')
+const productsController = require('../controllers/products.controller')
+const multerUtils = require('../multer.utils')
+
+const router = Router()
+
+//Mongoose
+//All products
+
+router.get('/', productsController.getProducts)
+
+// Product By ID
+
+router.get('/:pid', productsController.getProductById)
+
+//Add product
+
+router.post(
+  '/',
+  // body('title').notEmpty,
+  // body('description').notEmpty,
+  // body('price').isNumeric,
+  // body('category').notEmpty,
+  // body('code').notEmpty,
+  // body('stock').isNumeric,
+  multerUtils.single('file'),
+  productsController.addProduct
+)
+
+//Update product
+
+router.put(
+  '/:pid',
+  multerUtils.single('file'),
+  productsController.updateProduct
+)
+
+//Delete product by ID
+
+router.delete('/:pid', productsController.deleteProduct)
+
+module.exports = router

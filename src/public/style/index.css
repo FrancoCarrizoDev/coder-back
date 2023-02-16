@@ -1,0 +1,10 @@
+body {
+	background-color: whitesmoke;
+	padding: 10px;
+}
+
+#list-products {
+	display: flex;
+	align-items: stretch;
+	gap: 10px;
+}
