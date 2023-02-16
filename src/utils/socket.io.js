@@ -1,6 +1,6 @@
 const socket = require('socket.io')
-const ChatsManagerMongo = require('../dao/Mongo Manager/chatsManagerMongo')
-const ProductManagerMongo = require('../dao/Mongo Manager/productManagerMongo')
+const ChatsManagerMongo = require('../dao/mongoManager/chatsManagerMongo')
+const ProductManagerMongo = require('../dao/mongoManager/productManagerMongo')
 
 
 let io

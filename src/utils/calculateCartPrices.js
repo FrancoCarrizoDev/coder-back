@@ -1,4 +1,4 @@
-const ProductManager = require('../dao/Mongo Manager/productManagerMongo')
+const ProductManager = require('../dao/mongoManager/productManagerMongo')
 
 const calculateCartTotal = (products) => {
     return products.reduce(

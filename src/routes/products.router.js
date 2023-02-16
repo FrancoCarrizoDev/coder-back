@@ -17,12 +17,6 @@ router.get('/:pid', productsController.getProductById)
 
 router.post(
   '/',
-  // body('title').notEmpty,
-  // body('description').notEmpty,
-  // body('price').isNumeric,
-  // body('category').notEmpty,
-  // body('code').notEmpty,
-  // body('stock').isNumeric,
   multerUtils.single('file'),
   productsController.addProduct
 )

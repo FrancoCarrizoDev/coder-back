@@ -21,7 +21,7 @@ router.delete('/:cid/product/:pid', cartsController.deleteProductFromCartdID)
 router.put('/:cid', cartsController.updateCartByID)
 
 //Update Product quantity on Cart ID
-router.put('api/carts/:cid/products/:pid', cartsController.updateProductQuantityByCartID)
+router.put('/:cid/product/:pid', cartsController.updateProductQuantityByCartID)
 
 
 module.exports = router

@@ -1,4 +1,5 @@
-const CartsManagerMongo = require('../dao/Mongo Manager/cartsManagerMongo')
+const CartsManagerMongo = require('../dao/mongoManager/cartsManagerMongo')
+const productManagerMongo = require('../dao/mongoManager/productManagerMongo')
 
 const createCart = async (req, res) => {
 	try {
@@ -100,6 +101,16 @@ const deleteProductFromCartdID = async (req, res) => {
 const updateCartByID = async (req, res) => {
 	try {
 		const { cid } = req.params
+
+
+		const cart = await CartsManagerMongo.getCartByID(cid)
+		if (!cart) {
+			return res.status(400).json({
+				msg: `El carrito con el id ${cid} no existe`,
+				ok: false,
+			})
+		}
+
 		const products = req.body
 		await CartsManagerMongo.updateCartByID(cid, products)
 		res.json({
@@ -116,11 +127,52 @@ const updateCartByID = async (req, res) => {
 
 const updateProductQuantityByCartID = async (req, res) => {
 	try {
+
 		const { cid, pid } = req.params
-		const product = req.body
-		const quantity = product.quantity
-		await CartsManagerMongo.updateProductQuantityByCartID(cid, pid, quantity)
-	} catch (error) {}
+		const {quantity = 0} = req.body
+		const cart = await CartsManagerMongo.getCartByID(cid)
+		if (!cart) {
+			return res.status(400).json({
+				msg: `El carrito con el id ${cid} no existe`,
+				ok: false,
+			})
+		}
+
+		
+		const productInDb = await productManagerMongo.getProductById(pid)
+
+		if(!productInDb){
+			return res.status(400).json({
+				msg: `El producto con el id ${pid} no existe en base de datos`,
+				ok: false,
+			})
+		}
+
+		const indexProduct = cart.products.findIndex(({product}) => product._id == pid)
+
+		if(indexProduct === -1){
+			return res.status(400).json({
+				msg: `El producto con el id ${pid} no existe en el carrito`,
+				ok: false,
+			})
+		}
+
+		cart.products[indexProduct].quantity += quantity
+
+
+		await CartsManagerMongo.updateProductInCart(cid, cart)
+
+		res.json({
+			msg: 'OK',
+			payload: 'Cart updated successfully',
+		})
+
+	} catch (error) {
+		return res.status(500).json({
+			msg: 'Error',
+			payload: error.message,
+		})
+	}
 }
 
 module.exports = {

@@ -1,4 +1,4 @@
-const ProductManagerMongo = require('../dao/Mongo Manager/productManagerMongo')
+const ProductManagerMongo = require('../dao/mongoManager/productManagerMongo')
 const {
   emitDeleteProduct,
   emitAddProduct,

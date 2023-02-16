@@ -1,4 +1,4 @@
-const ChatsManagerMongo = require('../dao/Mongo Manager/chatsManagerMongo')
+const ChatsManagerMongo = require('../dao/mongoManager/chatsManagerMongo')
 const { edmitAddMessage } = require('../utils/socket.io')
 
 const getAllMessages = async (req, res) => {

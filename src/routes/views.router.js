@@ -1,7 +1,7 @@
 const { Router } = require('express')
 const ProductsModel = require('../dao/models/products.model')
-const ProductManager = require('../dao/File System Manager/productManager')
-const ChatsManagerMongo = require('../dao/Mongo Manager/chatsManagerMongo')
+const ProductManager = require('../dao/fileSystemManager/productManager')
+const ChatsManagerMongo = require('../dao/mongoManager/chatsManagerMongo')
 
 const router = Router()
 const path = './src/assets/Products.json' //ponerle dirname
