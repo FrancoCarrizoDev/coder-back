@@ -55,11 +55,13 @@ const deleteProduct = async (req, res) => {
 			})
 		}
 
+		// validar si el producto existe en mi DB
+
 		const existsProductInCart = cart.products.some(({ product }) => product._id == pid)
 
 		if (!existsProductInCart) {
 			return res.status(400).json({
-				msg: `El producto con el id ${pid} no existe`,
+				msg: `El producto con el id ${pid} no existe en el carrito`,
 				ok: false,
 			})
 		}
@@ -123,6 +125,7 @@ const updateProductQuantity = async (req, res) => {
 		const { cid, pid } = req.params
 		const { quantity = 0 } = req.body
 		const cart = await CartsManagerMongo.getById(cid)
+		
 		if (!cart) {
 			return res.status(400).json({
 				msg: `El carrito con el id ${cid} no existe`,
@@ -149,6 +152,8 @@ const updateProductQuantity = async (req, res) => {
 		}
 
 		cart.products[indexProduct].quantity += quantity
+		
+		// volver a calcular el valor del carrito
 
 		await CartsManagerMongo.updateCart(cid, cart)
 
