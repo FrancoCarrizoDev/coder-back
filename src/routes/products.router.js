@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const productsController = require('../controllers/products.controller')
-const multerUtils = require('../multer.utils')
+const multerUtils = require('../utils/multer.utils')
 
 const router = Router()
 
@@ -17,7 +17,7 @@ router.get('/:pid', productsController.getProductById)
 
 router.post(
   '/',
-  multerUtils.single('file'),
+  multerUtils.uploader.single('file'),
   productsController.addProduct
 )
 
@@ -25,7 +25,7 @@ router.post(
 
 router.put(
   '/:pid',
-  multerUtils.single('file'),
+  multerUtils.uploader.single('file'),
   productsController.updateProduct
 )
 

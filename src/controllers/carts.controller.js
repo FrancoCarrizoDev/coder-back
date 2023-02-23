@@ -1,6 +1,6 @@
 const CartsManagerMongo = require('../dao/mongoManager/cartsManagerMongo')
 const ProductManagerMongo = require('../dao/mongoManager/productManagerMongo')
-const { mapProductCart, calculateCartTotal } = require('../utils/calculateCartPrices')
+const { mapProductCart, calculateCartTotal } = require('../utils/product-cart.utilities')
 
 const createCart = async (req, res) => {
 	try {
@@ -26,21 +26,20 @@ const createCart = async (req, res) => {
 }
 
 const getCart = async (req, res) => {
-		const cid = req.params.cid
-		const cartFound = await CartsManagerMongo.getById(cid)
+	const cid = req.params.cid
+	const cartFound = await CartsManagerMongo.getById(cid)
 
-		if(cartFound){
-			return res.json({
-				msg: 'OK',
-				payload: cartFound,
-			})
-		}
-		
-		return res.status(404).json({
-			msg: 'Error',
-			payload: `No existe un carrito con el id ${cid}`,
+	if (cartFound) {
+		return res.json({
+			msg: 'OK',
+			payload: cartFound,
 		})
-	
+	}
+
+	return res.status(404).json({
+		msg: 'Error',
+		payload: `No existe un carrito con el id ${cid}`,
+	})
 }
 
 const deleteProduct = async (req, res) => {
@@ -55,7 +54,14 @@ const deleteProduct = async (req, res) => {
 			})
 		}
 
-		// validar si el producto existe en mi DB
+		const productInDb = ProductManagerMongo.getById(pid)
+
+		if (!productInDb) {
+			return res.status(400).json({
+				msg: `El producto con el id ${pid} no existe`,
+				ok: false,
+			})
+		}
 
 		const existsProductInCart = cart.products.some(({ product }) => product._id == pid)
 
@@ -73,13 +79,13 @@ const deleteProduct = async (req, res) => {
 		await CartsManagerMongo.updateCart(cid, cart)
 
 		res.json({
-			msg: 'OK',
+			ok: true,
 			payload: 'Product deleted successfully',
 		})
 	} catch (error) {
 		return res.status(500).json({
-			msg: 'Error',
-			payload: error.message,
+			msg: error.message,
+			ok: false,
 		})
 	}
 }
@@ -114,8 +120,8 @@ const updateAllProducts = async (req, res) => {
 		})
 	} catch (error) {
 		return res.status(500).json({
-			msg: 'Error',
-			payload: error.message,
+			msg: error.message,
+			ok: false,
 		})
 	}
 }
@@ -124,8 +130,16 @@ const updateProductQuantity = async (req, res) => {
 	try {
 		const { cid, pid } = req.params
 		const { quantity = 0 } = req.body
+
+		if (quantity === 0) {
+			return res.status(400).json({
+				msg: `La cantidad no puede ser 0`,
+				ok: false,
+			})
+		}
+
 		const cart = await CartsManagerMongo.getById(cid)
-		
+
 		if (!cart) {
 			return res.status(400).json({
 				msg: `El carrito con el id ${cid} no existe`,
@@ -152,19 +166,18 @@ const updateProductQuantity = async (req, res) => {
 		}
 
 		cart.products[indexProduct].quantity += quantity
-		
-		// volver a calcular el valor del carrito
+		cart.totalPrice = calculateCartTotal(cart.products)
 
 		await CartsManagerMongo.updateCart(cid, cart)
 
 		res.json({
-			msg: 'OK',
-			payload: 'Cart updated successfully',
+			msg: 'Cart updated successfully',
+			ok: true,
 		})
 	} catch (error) {
 		return res.status(500).json({
-			msg: 'Error',
-			payload: error.message,
+			msg: error.message,
+			ok: false,
 		})
 	}
 }
