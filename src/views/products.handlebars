@@ -1,11 +1,14 @@
 <div>
   <h1>Productos</h1>
+  {{#with session}}
+  {{email}}
+  {{/with}}
   <ul>
     {{#each products}}
       <li>
         <p>{{this.title}}</p>
         <p>{{this.price}}</p>
-        <img src={{this.thumbnail}} alt={{this.title}} />
+        <img src="{{this.thumbnail}}" alt="{{this.title}}" />
       </li>
     {{/each}}
   </ul>

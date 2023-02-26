@@ -19,14 +19,20 @@ const products = async (req, res) => {
 				id: product._id,
 				title: product.title,
 				price: product.price,
-				thumbnail: product.thumbnail,
+				thumbnail: product.thumbnail
 			}
 		}),
+		session: req.session.user
 	})
+}
+
+const login = async (req, res) => {
+	res.render('login')
 }
 
 module.exports = {
 	home,
 	realTimeProdcuts,
 	products,
+	login,
 }
